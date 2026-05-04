@@ -9,6 +9,7 @@ This repository contains:
 
 - Docker + Docker Compose
 - Go (tested with Go 1.26.2 per `youtube-ai-crawler/go.mod`)
+- Python 3 + `uv` (optional, only for downloading external datasets)
 
 ## Quick start
 
@@ -61,7 +62,32 @@ go run ./cmd/export-youtube-csv
 
 By default, the CSV is generated at `youtube-ai-crawler/data/youtube_ai_videos.csv` (via `OUTPUT_CSV`).
 
-### 5) Import CSV -> Postgres
+### 5) (Optional) Download external datasets (Python)
+
+This repo includes helper scripts to download external datasets into `youtube-ai-crawler/data/external/`:
+
+```bash
+cd ../youtube-ai-crawler
+uv run python scripts/download_kaggle_aiml_youtube.py
+uv run python scripts/download_hf_channel_metadata.py
+uv run python scripts/download_hf_youtube_transcriptions.py
+```
+
+### 6) Merge datasets
+
+Merge the base CSV with all external CSV files under `EXTERNAL_DIR` (recursively):
+
+```bash
+cd ../youtube-ai-crawler
+go run ./cmd/merge-datasets
+```
+
+Outputs:
+
+- `data/external/merged_youtube_ai_videos.csv`: base + merged records
+- `data/external/manual_review.csv`: records that need manual review or enrichment
+
+### 7) Import CSV -> Postgres
 
 ```bash
 cd ../youtube-ai-crawler
@@ -74,4 +100,3 @@ The importer loads `.env` from `youtube-ai-crawler/` and also tries to load `../
 
 - CSV outputs in `youtube-ai-crawler/data/*.csv` are ignored by `.gitignore`.
 - To open pgAdmin: `http://localhost:${PGADMIN_PORT}` and log in with `${PGADMIN_EMAIL}` / `${PGADMIN_PASSWORD}`.
-

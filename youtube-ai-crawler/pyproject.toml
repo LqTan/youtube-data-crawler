@@ -1,0 +1,11 @@
+[project]
+name = "youtube-ai-crawler"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "datasets>=4.8.5",
+    "kaggle>=2.1.0",
+    "pandas>=3.0.2",
+]

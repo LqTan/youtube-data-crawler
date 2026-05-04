@@ -29,6 +29,20 @@ func GetInt(key string, fallback int) int {
 	return n
 }
 
+func GetFloat(key string, fallback float64) float64 {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	n, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return fallback
+	}
+
+	return n
+}
+
 func LoadFile(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
