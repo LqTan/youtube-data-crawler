@@ -96,6 +96,13 @@ go run ./cmd/import-csv-postgres
 
 The importer loads `.env` from `youtube-ai-crawler/` and also tries to load `../postgres/.env`, so make sure `POSTGRES_*` matches your running Postgres instance.
 
+To import a specific CSV file without editing `.env`, pass it as an argument:
+
+```bash
+cd ../youtube-ai-crawler
+go run ./cmd/import-csv-postgres data/external/merged_youtube_ai_videos.csv
+```
+
 ## Notes
 
 - CSV outputs in `youtube-ai-crawler/data/*.csv` are ignored by `.gitignore`.

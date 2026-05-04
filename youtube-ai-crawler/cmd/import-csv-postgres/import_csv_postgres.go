@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"youtube-ai-crawler/internal/env"
 	"youtube-ai-crawler/internal/importcsv"
@@ -15,7 +16,14 @@ func main() {
 
 	ctx := context.Background()
 
-	inputCSV := env.Get("INPUT_CSV", "data/youtube_ai_videos.csv")
+	defaultInputCSV := env.Get("INPUT_CSV", "data/youtube_ai_videos.csv")
+	inputCSVFlag := flag.String("input-csv", defaultInputCSV, "Input CSV path to import")
+	flag.Parse()
+
+	inputCSV := *inputCSVFlag
+	if flag.NArg() >= 1 {
+		inputCSV = flag.Arg(0)
+	}
 
 	db, err := pgconn.Connect(ctx)
 	if err != nil {
