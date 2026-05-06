@@ -82,6 +82,13 @@ cd ../youtube-ai-crawler
 go run ./cmd/merge-datasets
 ```
 
+Optional: enrich missing YouTube fields for external records using the YouTube Data API (uses `videos.list`, quota-friendly). This requires `YOUTUBE_API_KEY` to be set (in `youtube-ai-crawler/.env` or passed as a flag):
+
+```bash
+cd ../youtube-ai-crawler
+go run ./cmd/merge-datasets --enable-youtube-enrichment --youtube-enrich-max-ids=2000
+```
+
 Outputs:
 
 - `data/external/merged_youtube_ai_videos.csv`: base + merged records
