@@ -1,6 +1,7 @@
 package mergedatasets
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"youtube-ai-crawler/internal/youtube"
 )
 
 func Run(config Config) error {
@@ -17,13 +19,41 @@ func Run(config Config) error {
 		return err
 	}
 
+	ctx := context.Background()
+	var yt *youtube.Client
+	remainingEnrichIDs := config.YouTubeEnrichMaxIDs
+
+	if config.EnableYouTubeEnrichment && strings.TrimSpace(config.YouTubeAPIKey) != "" {
+		yt = youtube.NewClient(strings.TrimSpace(config.YouTubeAPIKey))
+	}
+
 	externalFiles, err := DiscoverExternalFiles(DefaultDiscoverOptions(config.ExternalDir))
 	if err != nil {
-		return err
+		if os.IsNotExist(err) {
+			externalFiles = nil
+		} else {
+			return err
+		}
 	}
 
 	if len(externalFiles) == 0 {
 		fmt.Println("No external CSV files found in:", config.ExternalDir)
+		if err := os.MkdirAll(filepath.Dir(config.OutputCSV), 0755); err != nil {
+			return err
+		}
+		if err := writeCSV(config.OutputCSV, baseRecords); err != nil {
+			return err
+		}
+
+		if err := os.MkdirAll(filepath.Dir(config.ManualReviewCSV), 0755); err != nil {
+			return err
+		}
+		if err := writeCSV(config.ManualReviewCSV, []VideoRecord{}); err != nil {
+			return err
+		}
+
+		fmt.Println("Merged output:", config.OutputCSV)
+		fmt.Println("Manual review file:", config.ManualReviewCSV)
 		return nil
 	}
 
@@ -53,6 +83,27 @@ func Run(config Config) error {
 		if err != nil {
 			fmt.Println("Read external CSV failed:", externalFile, err)
 			continue
+		}
+
+		if yt != nil && (remainingEnrichIDs > 0 || config.YouTubeEnrichMaxIDs == 0) {
+			maxForThisFile := remainingEnrichIDs
+			if config.YouTubeEnrichMaxIDs == 0 {
+				maxForThisFile = 0
+			}
+
+			enriched, stats, err := EnrichMissingYouTubeFields(ctx, yt, externalRecords, maxForThisFile, videoIndex)
+			if err != nil {
+				fmt.Println("YouTube enrichment failed:", err)
+			} else {
+				externalRecords = enriched
+				fmt.Println("YouTube enrichment:", FormatYouTubeEnrichmentStats(stats))
+				if remainingEnrichIDs > 0 {
+					remainingEnrichIDs -= stats.Requested
+					if remainingEnrichIDs < 0 {
+						remainingEnrichIDs = 0
+					}
+				}
+			}
 		}
 
 		exactMerged := 0

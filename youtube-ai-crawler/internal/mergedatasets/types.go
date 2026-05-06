@@ -8,6 +8,9 @@ type Config struct {
 	OutputCSV       string
 	ManualReviewCSV string
 	Threshold       float64
+	EnableYouTubeEnrichment bool
+	YouTubeAPIKey           string
+	YouTubeEnrichMaxIDs     int
 }
 
 type VideoRecord struct {
